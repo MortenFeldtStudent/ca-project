@@ -1,0 +1,28 @@
+version: 2
+jobs:
+  test:
+    docker:
+      - image: circleci/python
+    steps:
+        - checkout
+        - run:
+           name: Python Test
+           command: python tests.py   
+  dockerize:
+    machine: true
+    steps:
+      - checkout
+      - run: docker login -u $DOCKER_USER -p $DOCKER_PASS
+      - run: docker build -t $DOCKER_USER/app:$CIRCLE_SHA1 .
+      - run: docker tag $DOCKER_USER/app:$CIRCLE_SHA1 $DOCKER_USER/app:latest
+      - run: docker push $DOCKER_USER/app:$CIRCLE_SHA1
+      - run: docker push $DOCKER_USER/app:latest   
+
+workflows:
+  version: 2
+  workflow_exercise:
+    jobs:
+      - test 
+      - dockerize:
+          requires:
+            - test
